@@ -27,6 +27,16 @@ http := import('http')
 
 Port := 9898
 OakExec := args().0
+
+if fs.statFile('./www') {
+	? -> ?
+	_ -> {
+		// why no chdir
+		printf('please run me inside ./www')
+		exit(1)
+	}
+}
+
 HighlightTemplate := fs.readFile('./tpl/highlight.html')
 HighlightEmbedTemplate := fs.readFile('./tpl/highlight-embed.html')
 
@@ -35,6 +45,7 @@ server := http.Server()
 {
 	// explicit static paths
 	'/': './static/index.html'
+	'/spec/': './static/spec/index.html'
 	'/lib/': './static/lib/index.html'
 	'/posts/': './static/posts/index.html'
 	'/highlight/': './static/highlight.html'
