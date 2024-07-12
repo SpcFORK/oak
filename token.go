@@ -45,7 +45,6 @@ const (
 	assign
 	nonlocalAssign
 	pipeArrow
-	pipeDestruct
 	branchArrow
 	pushArrow
 	colon
@@ -115,8 +114,6 @@ func (t token) String() string {
 		return "<-"
 	case pipeArrow:
 		return "|>"
-	case pipeDestruct:
-		return "|."
 	case branchArrow:
 		return "->"
 	case pushArrow:
@@ -378,9 +375,15 @@ func (t *tokenizer) nextToken() token {
 	case '&':
 		return token{kind: and, pos: t.currentPos()}
 	case '|':
-		if !t.isEOF() && t.peek() == '>' {
-			t.next()
-			return token{kind: pipeArrow, pos: t.currentPos()}
+		if !t.isEOF() {
+			if t.peek() == '>' {
+				t.next()
+				return token{kind: pipeArrow, pos: t.currentPos()}
+			}
+			if t.peek() == '.' {
+				t.next()
+				return token{kind: pipeArrow, pos: t.currentPos()}
+			}
 		}
 		return token{kind: or, pos: t.currentPos()}
 	case '>':
