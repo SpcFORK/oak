@@ -45,6 +45,7 @@ const (
 	assign
 	nonlocalAssign
 	pipeArrow
+	pipeDestruct
 	branchArrow
 	pushArrow
 	colon
@@ -114,6 +115,8 @@ func (t token) String() string {
 		return "<-"
 	case pipeArrow:
 		return "|>"
+	case pipeDestruct:
+		return "|."
 	case branchArrow:
 		return "->"
 	case pushArrow:
