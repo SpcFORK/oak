@@ -1,4 +1,4 @@
-# Oak Programming Language Documentation
+# Oak Programming Language Specification
 
 ## Syntax
 

@@ -56,6 +56,29 @@ with fs.readFile('./www/tpl/lib.html') fn(tplFile) if tplFile {
 	}
 }
 
+// generate the spec page
+specPath := './docs/spec.md'
+with fs.readFile('./www/tpl/spec.html') fn(tplFile) if tplFile {
+	? -> printlog('Could not read template')
+	_ -> if specFile := fs.readFile(specPath) {
+		? -> {
+			printlog('Could not read file:', specPath)
+			?
+		}
+		_ -> {
+			content := md.parse(specFile) |> md.compile()
+
+			pagePath := './www/static/spec/index.html'
+			page := tplFile |> fmt.format({
+				content: content
+			})
+			with fs.writeFile(pagePath, page) fn {
+				printlog('Generated spec')
+			}
+		}
+	}
+}
+
 // generate a post page for every post in ./content, and generate a listing
 // page of every post on the site
 with fs.listFiles('./www/content') fn(files) {

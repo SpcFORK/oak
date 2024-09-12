@@ -1,0 +1,101 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <title>Language Specification | Oak programming language</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/lib.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <div class="home">
+                <a href="/">Oak</a>
+            </div>
+            <nav>
+                <a href="/spec/">spec</a>
+                <a href="/lib/"><span class="desktop">standard library</span><span class="mobile">stdlib</span></a>
+                <a href="/posts/">blog</a>
+                <a href="/#start">download</a>
+                <a href="https://github.com/thesephist/oak" target="_blank">source ↗</a>
+            </nav>
+        </div>
+    </header>
+    <main aria-role="main">
+        <article class="overlay">
+            <h1>Oak Programming Language Specification</h1><h2>Syntax</h2><p>Oak, like <a href="https://dotink.co">Ink</a>, has automatic comma insertion at end of lines. This means if a comma can be inserted at the end of a line, it will automatically be inserted.</p><pre><code data-lang="go">program := expr*
+
+expr := literal | identifier |
+    assignment |
+    propertyAccess |
+    unaryExpr | binaryExpr |
+    prefixCall | infixCall |
+    ifExpr | withExpr |
+    block
+
+literal := nullLiteral |
+    numberLiteral | stringLiteral | atomLiteral | boolLiteral |
+    listLiteral | objectLiteral |
+    fnLiterael
+
+nullLiteral := '?'
+numberLiteral := \d+ | \d* '.' \d+
+stringLiteral := // single quoted string with standard escape sequences + \x00 syntax
+atomLiteral := ':' + identifier
+boolLiteral := 'true' | 'false'
+listLiteral := '[' ( expr ',' )* ']' // last comma optional
+objectLiteral := '{' ( expr ':' expr ',' )* '}' // last comma optional
+fnLiteral := 'fn' '(' ( identifier ',' )* (identifier '...')? ')' expr
+
+identifier := \w_ (\w\d_?!)* | _
+
+assignment := (
+    identifier [':=' '&lt;-'] expr |
+    listLiteral [':=' '&lt;-'] expr |
+    objectLiteral [':=' '&lt;-'] expr
+)
+
+propertyAccess := identifier ('.' identifier)+
+
+unaryExpr := ('!' | '-') expr
+binaryExpr := expr (+ - * / % ^ &amp; | > &lt; = >= &lt;= &lt;&lt;) binaryExpr
+
+prefixCall := expr '(' (expr ',')* ')'
+infixCall := expr '|>' prefixCall
+
+ifExpr := 'if' expr? '{' ifClause* '}'
+ifClause := expr '->' expr ','
+
+withExpr := 'with' prefixCall fnLiteral
+
+block := '{' expr+ '}' | '(' expr* ')'</code></pre><h3>AST node types</h3><pre><code data-lang="c">nullLiteral
+stringLiteral
+numberLiteral
+boolLiteral
+atomLiteral
+listLiteral
+objectLiteral
+fnLiteral
+identifier
+assignment
+propertyAccess
+unaryExpr
+binaryExpr
+fnCall
+ifExpr
+block</code></pre><h2>Language Functions</h2><ul><li><code>import(path)</code>: Imports a module located at the specified <code>path</code>.</li><li><code>string(x)</code>: Converts the argument <code>x</code> to a string.</li><li><code>int(x)</code>: Converts the argument <code>x</code> to an integer.</li><li><code>float(x)</code>: Converts the argument <code>x</code> to a floating-point number.</li><li><code>atom(c)</code>: Creates an atom with the specified character <code>c</code>.</li><li><code>codepoint(c)</code>: Returns the Unicode code point of the character <code>c</code>.</li><li><code>char(n)</code>: Converts the Unicode code point <code>n</code> to a character.</li><li><code>type(x)</code>: Returns the type of the argument <code>x</code>.</li><li><code>len(x)</code>: Returns the length of the argument <code>x</code>.</li><li><code>keys(x)</code>: Returns an array of keys of the argument <code>x</code>.</li></ul><h2>OS Functions</h2><ul><li><code>args()</code>: Returns command-line arguments as an array of strings.</li><li><code>env()</code>: Returns the environment variables as an object.</li><li><code>time()</code>: Returns the current time as a float.</li><li><code>nanotime()</code>: Returns the current time in nanoseconds as an integer.</li><li><code>exit(code)</code>: Exits the program with the specified exit code.</li><li><code>rand()</code>: Generates a random floating-point number between 0 and 1.</li><li><code>srand(length)</code>: Seeds the random number generator with the specified length.</li><li><code>wait(duration)</code>: Pauses the program execution for the specified duration.</li><li><code>exec(path, args, stdin)</code>: Executes a command specified by <code>path</code> with the given <code>args</code> and optional standard input <code>stdin</code>. Returns stdout, stderr, and end events.</li></ul><h2>I/O Interfaces</h2><ul><li><code>input()</code>: Reads input from the standard input.</li><li><code>print()</code>: Writes output to the standard output.</li><li><code>ls(path)</code>: Lists files and directories in the specified path.</li><li><code>mkdir(path)</code>: Creates a directory at the specified path.</li><li><code>rm(path)</code>: Removes the file or directory at the specified path.</li><li><code>stat(path)</code>: Retrieves file or directory information at the specified path.</li><li><code>open(path, flags, perm)</code>: Opens a file at the specified path with the given flags and permissions.</li><li><code>close(fd)</code>: Closes the file descriptor <code>fd</code>.</li><li><code>read(fd, offset, length)</code>: Reads data from the file descriptor <code>fd</code> starting at the specified <code>offset</code> and reading <code>length</code> bytes.</li><li><code>write(fd, offset, data)</code>: Writes data to the file descriptor <code>fd</code> starting at the specified <code>offset</code>.</li><li><code>close := listen(host, handler)</code>: Listens for incoming connections on the specified <code>host</code> and handles them with the provided <code>handler</code> function.</li><li><code>req(data)</code>: Sends an HTTP request with the provided data.</li></ul><p><br/>  <code></code>`go   // Req syntax:   // ---<br/>  req({     url: ''     method: 'GET'     headers: {}     body: _   })   <code></code>`<br/></p><h1>Math Functions</h1><ul><li>Trigonometric functions<ul><li><code>sin(n)</code>: Calculates the sine of the angle <code>n</code>.</li><li><code>cos(n)</code>: Calculates the cosine of the angle <code>n</code>.</li><li><code>tan(n)</code>: Calculates the tangent of the angle <code>n</code>.</li></ul></li><li>Inverse Trigonometric functions<ul><li><code>asin(n)</code>: Calculates the arcsine of the value <code>n</code>.</li><li><code>acos(n)</code>: Calculates the arccosine of the value <code>n</code>.</li><li><code>atan(n)</code>: Calculates the arctangent of the value <code>n</code>.</li></ul></li><li>Power and logarithmic functions<ul><li><code>pow(b, n)</code>: Raises the base <code>b</code> to the power of <code>n</code>.</li><li><code>log(b, n)</code>: Calculates the logarithm of <code>n</code> with base <code>b</code>.</li></ul></li></ul>
+        </article>
+    </main>
+    <footer>
+        <div class="split overlay">
+            <div class="left">
+            </div>
+            <div class="right">
+                - <a href="https://thesephist.com/">Linus</a>
+            </div>
+        </div>
+    </footer>
+</body>
